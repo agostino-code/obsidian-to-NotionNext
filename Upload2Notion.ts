@@ -242,9 +242,7 @@ export class Upload2Notion {
 		favicon: string,
 		datetime: string,
 		markdown: string,
-		nowFile: TFile,
-		app: App,
-		settings: any): Promise<any> {
+		nowFile: TFile): Promise<any> {
 		let res: any
 		const yamlObj: any = yamlFrontMatter.loadFront(markdown);
 		const __content = yamlObj.__content
@@ -287,18 +285,18 @@ export class Upload2Notion {
 			);
 		}
 		if (res.status === 200) {
-			await this.updateYamlInfo(markdown, nowFile, res, app, settings)
+			await this.updateYamlInfo(markdown, nowFile, res)
 		} else {
 			new Notice(`${res.text}`)
 		}
 		return res
 	}
 
-	async updateYamlInfo(yamlContent: string, nowFile: TFile, res: any, app: App, settings: any) {
+	async updateYamlInfo(yamlContent: string, nowFile: TFile, res: any) {
 		const yamlObj: any = yamlFrontMatter.loadFront(yamlContent);
 		let { url, id } = res.json
 		// replace www to notionID
-		const { notionID } = settings;
+		const { notionID } = this.app.settings
 		if (notionID !== "") {
 			// replace url str "www" to notionID
 			url = url.replace("www.notion.so", `${notionID}.notion.site`)

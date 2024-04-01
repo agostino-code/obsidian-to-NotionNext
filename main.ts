@@ -13,6 +13,7 @@ import {addIcons}  from 'icon';
 import { Upload2Notion } from "Upload2Notion";
 import {NoticeMConfig} from "Message";
 import { CLIENT_RENEG_LIMIT } from "tls";
+import { getNowFileMarkdownContentNext } from "./getMarkdownNext"; // Import the necessary function
 
 
 // Remember to rename these classes and interfaces!
@@ -43,17 +44,17 @@ export default class ObsidianSyncNotionPlugin extends Plugin {
 		await this.loadSettings();
 		addIcons();
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon(
+		this.addRibbonIcon(
 			"notion-logo",
 			"Share to notion",
-			async (evt: MouseEvent) => {
+			async () => {
 				// Called when the user clicks the icon.
 				this.upload();
 			}
 		);
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
+		this.addStatusBarItem();
 		// statusBarItemEl.setText("share to notion");
 
 		this.addCommand({
@@ -80,20 +81,35 @@ export default class ObsidianSyncNotionPlugin extends Plugin {
 					);
 					return;
 				}
-				const { markDownData, nowFile, tags } =await this.getNowFileMarkdownContent(this.app);
+const {
+		markDownData,
+		nowFile,
+		emoji,
+		cover,
+		tags,
+		type,
+		slug,
+		stats,
+		category,
+		summary,
+		paword,
+		favicon,
+		datetime
+	} = await getNowFileMarkdownContentNext(app)
 
+	if (markDownData) {
+		const {basename} = nowFile;
+		const upload = new Upload2Notion(this);
+		const res = await upload.syncMarkdownToNotion(basename, emoji, cover, tags, type, slug, stats, category, summary, paword, favicon, datetime, markDownData, nowFile);
 
-				if (markDownData) {
-					const { basename } = nowFile;
-					const upload = new Upload2Notion(this);
-					const res = await upload.syncMarkdownToNotion(basename, allowTags, tags, markDownData, nowFile, this.app, this.settings)
-					if(res.status === 200){
-						new Notice(`${langConfig["sync-success"]}${basename}`)
-					}else {
-						new Notice(`${langConfig["sync-fail"]}${basename}`, 5000)
-					}
-				}
+		if (res.status === 200) {
+			new Notice('sync success');
+		} else {
+			new Notice('sync fail');
+		}
+
 	}
+}
 
 	async getNowFileMarkdownContent(app: App) {
 		const nowFile = app.workspace.getActiveFile();
